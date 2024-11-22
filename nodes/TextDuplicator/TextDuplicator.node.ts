@@ -4,6 +4,8 @@ import {
     INodeType,
     INodeTypeDescription,
 } from 'n8n-workflow';
+import { chromium } from 'playwright';
+import { Summarizer } from './services'
 
 export class TextDuplicator implements INodeType {
     description: INodeTypeDescription = {
@@ -40,6 +42,12 @@ export class TextDuplicator implements INodeType {
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
         const items = this.getInputData();
         const returnData: INodeExecutionData[] = [];
+        const PAGE_TIMEOUT = 45000; // 30 seconds
+
+        var browser = await chromium.launch({ 
+            headless: true,
+            timeout: PAGE_TIMEOUT 
+          });
 
         try {
 
@@ -57,6 +65,24 @@ export class TextDuplicator implements INodeType {
                 }
                 
                 const inputText = this.getNodeParameter('inputText', i) as string;
+
+
+
+                const summarizer = new Summarizer(credentials.apiKey);
+
+                try {
+                    const result = await summarizer.search(query);
+                    console.log(chalk.green("Summary:"));
+                    // Wrap text at 80 characters
+                    //const wrappedText = result.match(/.{1,80}(?:\s|$)/g)?.join('\n') || result;
+                    console.log(chalk.white(result));
+                } catch (error) {
+                    console.error(chalk.red("Error:"), error.message);
+                    // Log the full error in development
+                    if (process.env.NODE_ENV === 'development') {
+                        console.error(chalk.red(error));
+                    }
+                }
                 
                 // Simple duplication logic
                 const duplicatedText = inputText + inputText;
@@ -66,7 +92,9 @@ export class TextDuplicator implements INodeType {
                     json: {
                         originalText: inputText,
                         duplicatedText: duplicatedText,
-                        hasCredentials
+                        browser: typeof browser,
+                        hasCredentials,
+                        workedOn: '11-21-24'
                     },
                 });
             }
