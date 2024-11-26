@@ -1,6 +1,9 @@
 @echo off
 setlocal
 
+REM > install-node.bat n8n-nodes-textduplicator
+
+
 REM Check if node name parameter was provided
 if "%~1"=="" (
     echo ERROR: Please provide the node name as a parameter
@@ -24,6 +27,7 @@ echo Starting custom node installation for: %NODE_NAME%
 REM Step 1: Clean up any existing installation from n8n custom nodes directory
 REM This prevents conflicts with old versions
 echo Step 1: Cleaning up existing installation...
+REM This directory is where your n8n instance is run from
 cd C:\Users\jwolf\.n8n\custom\node_modules
 if exist %NODE_NAME% (
     echo Found existing installation, removing it...
@@ -33,7 +37,9 @@ if exist %NODE_NAME% (
 REM Step 2: Navigate to project directory and clean build artifacts
 REM Remove the dist folder to ensure a clean build
 echo Step 2: Preparing for fresh build...
+REM where this project code lives
 cd C:\git\personal\%NODE_NAME%
+
 if exist dist (
     echo Cleaning dist folder for fresh build...
     rmdir /s /q dist

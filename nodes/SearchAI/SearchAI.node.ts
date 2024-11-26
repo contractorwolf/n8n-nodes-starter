@@ -8,16 +8,16 @@ import {
 import { Summarizer } from './services/Summarizer'
 // import chalk from 'chalk';
 
-export class TextDuplicator implements INodeType {
+export class SearchAI implements INodeType {
     description: INodeTypeDescription = {
-        displayName: 'Text Duplicator',
-        name: 'TextDuplicator',
-        icon: 'file:textduplicator.svg',
+        displayName: 'Search AI',
+        name: 'SearchAI',
+        icon: 'file:searchai.svg',
         group: ['transform'],
         version: 1,
-        description: 'Duplicates input text',
+        description: 'Deeply Google searches a topic and uses AI to write a summary description',
         defaults: {
-            name: 'Text Duplicator',
+            name: 'Search AI',
         },
         inputs: ['main'],
         outputs: ['main'],
@@ -29,12 +29,12 @@ export class TextDuplicator implements INodeType {
         ],
         properties: [
             {
-                displayName: 'Input Text',
-                name: 'inputText',
+                displayName: 'Search Query',
+                name: 'searchQuery',
                 type: 'string',
                 default: '',
-                placeholder: 'Enter text to duplicate',
-                description: 'The text to be duplicated',
+                placeholder: 'Enter topic to be searched',
+                description: 'Your query to be searched',
                 required: true,
             },
         ],
@@ -46,52 +46,33 @@ export class TextDuplicator implements INodeType {
 
         try {
 
+						const credentials = await this.getCredentials('openAiApi');
+
+						const apiKey = credentials?.apiKey.toString();
+
+						const summarizer = new Summarizer(apiKey);
+
             // Process each input item
             for (let i = 0; i < items.length; i++) {
-
-                const credentials = await this.getCredentials('openAiApi');
-
-								let apiKey = '';
-
-
-                let hasCredentials = false;
-
-                if (credentials?.apiKey) {
-                    hasCredentials = true;
-										apiKey = credentials?.apiKey.toString();
-                    this.logger.info('loading credentials:', { key: apiKey });
-
-                } else {
-                    this.logger.info('no key found');
-                }
-
-                const inputText = this.getNodeParameter('inputText', i) as string;
-
-                const summarizer = new Summarizer(apiKey);
+                const searchQuery = this.getNodeParameter('searchQuery', i) as string;
 
                 try {
-                    const result = await summarizer.search(inputText);
+                    const result = await summarizer.search(searchQuery);
+
                     console.log("Summary:");
-
                     console.log(result);
-
 
 										// Prepare the output
 										returnData.push({
 												json: {
-													inputText,
+														searchQuery,
 														content: result,
-														hasCredentials,
-														workedOn: '11-26-24'
 												},
 										});
 
                 } catch (error) {
                     console.error(error.message);
-                    // Log the full error in development
                 }
-
-
             }
             return [returnData];
 
